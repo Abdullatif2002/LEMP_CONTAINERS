@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Containerized LEMP Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #333;
+    }
+    #msg, #time {
+      background: #fff;
+      padding: 15px 25px;
+      border-radius: 8px;
+      margin: 10px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 350px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 LEMP Containers Project</h1>
+  <div id="msg">Loading message...</div>
+  <div id="time">Loading server time...</div>
+
+  <script>
+    fetch('/api')
+      .then(r => r.json())
+      .then(d => { document.getElementById('msg').innerText = d.message; })
+      .catch(e => { document.getElementById('msg').innerText = 'API error: ' + e; });
+
+    fetch('/api/time')
+      .then(r => r.json())
+      .then(d => {
+        if (d.server_time) {
+          document.getElementById('time').innerText = 'Server time: ' + d.server_time;
+        } else if (d.error) {
+          document.getElementById('time').innerText = 'Error: ' + d.error;
+        } else {
+          document.getElementById('time').innerText = 'No time returned';
+        }
+      })
+      .catch(e => { document.getElementById('time').innerText = 'API error: ' + e; });
+  </script>
+</body>
+</html>
+
