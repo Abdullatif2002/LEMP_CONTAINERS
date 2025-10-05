@@ -1,0 +1,95 @@
+# .github/workflows/deploy.yml
+name: CI/CD for Containerized LEMP App
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+      # Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Setup Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Login to DockerHub
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build & push backend
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:${{ github.sha }}
+
+      # Build & push frontend
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:${{ github.sha }}
+
+  deploy-to-vm:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      # Checkout code (optional)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Deploy to VM via SSH
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd /opt/lemp
+
+            # Ensure db/init folder exists
+            mkdir -p /opt/lemp/db/init
+            sudo chown -R $(whoami) /opt/lemp/db/init
+            sudo chmod -R u+w /opt/lemp/db/init
+
+            # Copy init.sql if needed
+            cp ./db/init/init.sql /opt/lemp/db/init/init.sql || true
+
+            # Stop old containers
+            docker compose down || true
+
+            # Pull new images
+            docker compose pull
+
+            # Start containers
+            docker compose up -d
+
+            # Show running containers
+            docker compose ps
