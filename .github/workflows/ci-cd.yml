@@ -46,3 +46,4 @@ jobs:
           curl -f http://localhost:8000/api
           docker stop temp-backend
           docker rm temp-backend
+
