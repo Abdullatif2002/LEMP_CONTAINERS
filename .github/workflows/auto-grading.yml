@@ -1,0 +1,18 @@
+name: Auto Grading
+
+on:
+  workflow_dispatch:  
+  schedule:
+    - cron: '0 0 * * *'  
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Auto Grading Script
+        run: |
+          echo "Running auto-grading..."
+          ./grade.sh  # or whatever grading command you have
