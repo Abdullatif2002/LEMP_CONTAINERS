@@ -15,35 +15,27 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     steps:
-      # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Log in to DockerHub
       - name: Log in to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      # -------------------
       # Build & push backend
-      - name: Build Backend Docker Image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest ./backend
+      - name: Build & Push Backend
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest ./backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest
 
-      - name: Push Backend Docker Image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest
-
-      # -------------------
       # Build & push frontend
-      - name: Build Frontend Docker Image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest ./frontend
+      - name: Build & Push Frontend
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest ./frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest
 
-      - name: Push Frontend Docker Image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest
-
-      # -------------------
       # Optional: Test backend API
       - name: Test Backend API
         run: |
