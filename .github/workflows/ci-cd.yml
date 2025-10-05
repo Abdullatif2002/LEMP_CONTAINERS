@@ -7,15 +7,16 @@ on:
   pull_request:
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     steps:
-      # Checkout the repository
-      - name: Checkout code
+      # Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       # Set up Docker Buildx
@@ -26,19 +27,24 @@ jobs:
       - name: Log in to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      # Build & Push Backend
-      - name: Build & Push Backend
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest ./backend
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest
+      # -------------------
+      # Build & push backend
+      - name: Build Backend Docker Image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest ./backend
 
-      # Build & Push Frontend
-      - name: Build & Push Frontend
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest ./frontend
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest
+      - name: Push Backend Docker Image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest
 
-      # Optional: Test Backend API
+      # -------------------
+      # Build & push frontend
+      - name: Build Frontend Docker Image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest ./frontend
+
+      - name: Push Frontend Docker Image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-frontend:latest
+
+      # -------------------
+      # Optional: Test backend API
       - name: Test Backend API
         run: |
           docker run -d --name temp-backend -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/containerized-lemp-backend:latest
@@ -46,5 +52,3 @@ jobs:
           curl -f http://localhost:8000/api
           docker stop temp-backend
           docker rm temp-backend
-
-
