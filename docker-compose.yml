@@ -1,40 +1,35 @@
-version: '3.9'  # optional, can be removed as Docker warns it's obsolete
-
 services:
   db:
     image: mysql:8.0
     container_name: lemp-db
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
-      - db-data:/var/lib/mysql
+      - db_data:/var/lib/mysql
 
   backend:
-    build: ./backend
+    image: abdullatifk/lemp-backend:1.0.0
     container_name: lemp-backend
-    environment:
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+    restart: always
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     depends_on:
       - db
 
   frontend:
-    build: ./frontend
+    image: abdullatifk/lemp-frontend:1.0.0
     container_name: lemp-frontend
+    restart: always
     ports:
       - "8080:80"
-    depends_on:
-      - backend
 
 volumes:
-  db-data:
+  db_data:

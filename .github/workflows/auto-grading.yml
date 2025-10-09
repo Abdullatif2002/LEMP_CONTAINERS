@@ -1,18 +1,39 @@
-name: Auto Grading
+name: 🚀 Auto Grading
 
 on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:  
-  schedule:
-    - cron: '0 0 * * *'  
 
 jobs:
-  grade:
+  auto-grade:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          echo "Preparing environment..."
+          chmod +x grade.sh || true
+          echo "Environment ready ✅"
 
       - name: Run Auto Grading Script
         run: |
-          echo "Running auto-grading..."
-          ./grade.sh  # or whatever grading command you have
+          echo "Running auto grading..."
+          ./grade.sh
+        
+        continue-on-error: false
+
+      - name: Show grading result summary
+        if: always()
+        run: |
+          echo "✅ Auto-grading complete!"
+          echo "Check the logs above for detailed results."
+
